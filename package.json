@@ -1,0 +1,48 @@
+{
+  "name": "@rinxun/numeric-calculator",
+  "version": "1.0.0",
+  "description": "Calculate addition, subtaction, multiplication, division precisely, for tackling the precision issue",
+  "keywords": [
+    "long",
+    "numeric",
+    "percision",
+    "calculator"
+  ],
+  "main": "index.js",
+  "type": "module",
+  "types": "**/*.d.ts",
+  "license": "MIT",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rinxun/numeric-calculator"
+  },
+  "bugs": {
+    "url": "https://github.com/rinxun/numeric-calculator/issues",
+    "email": "janden_ma@qq.com"
+  },
+  "homepage": "https://github.com/rinxun/numeric-calculator",
+  "author": {
+    "name": "Janden Ma",
+    "email": "janden_ma@qq.com",
+    "url": "https://github.com/JandneMa"
+  },
+  "scripts": {
+    "build": "./node_modules/.bin/tsc"
+  },
+  "files": [
+    "*.js",
+    "*.d.ts",
+    ".gitignore",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "@types/node": "^17.0.23"
+  }
+}

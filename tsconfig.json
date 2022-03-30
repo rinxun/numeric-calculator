@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "outDir": "./",
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["esnext"],
+    "strict": true,
+    "pretty": true,
+    "noEmit": false,
+    "allowJs": true,
+    "listFiles": true,
+    "sourceMap": false,
+    "declaration": true,
+    "alwaysStrict": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "esModuleInterop": false,
+    "isolatedModules": true,
+    "strictNullChecks": true,
+    "listEmittedFiles": true,
+    "resolveJsonModule": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "files": ["index.ts"]
+}
