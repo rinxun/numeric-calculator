@@ -20,7 +20,7 @@ yarn add @rinxun/numeric-calculator
 
 <h2>License</h2>
 
-This project is licensed under the terms of the [MIT license](https://github.com/rinxun/numeric-calculator/blob/main/LICENSE).
+This project is licensed under the terms of the [MIT license](https://github.com/rinxun/numeric-calculator/blob/master/LICENSE).
 
 
 
