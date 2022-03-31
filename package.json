@@ -15,7 +15,6 @@
     "division"
   ],
   "main": "index.js",
-  "type": "module",
   "types": "**/*.d.ts",
   "license": "MIT",
   "private": false,

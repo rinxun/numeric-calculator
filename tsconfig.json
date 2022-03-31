@@ -2,10 +2,9 @@
   "compilerOptions": {
     "target": "ES5",
     "outDir": "./",
-    "jsx": "react-jsx",
-    "module": "esnext",
+    "module": "CommonJS",
     "moduleResolution": "node",
-    "lib": ["esnext"],
+    "lib": ["ESNext"],
     "strict": true,
     "pretty": true,
     "noEmit": false,
