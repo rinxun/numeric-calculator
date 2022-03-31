@@ -1,6 +1,6 @@
 <h1 align="center">Numeric Calculator</h1>
 
-<p align="center">Calculate addition, subtaction, multiplication, division precisely, for tackling the precision issue</p>
+<p align="center">Calculate addition, subtraction, multiplication, division precisely, for tackling the precision issue</p>
 
 ---
 

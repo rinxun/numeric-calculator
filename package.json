@@ -1,7 +1,7 @@
 {
   "name": "@rinxun/numeric-calculator",
   "version": "1.0.2",
-  "description": "Calculate addition, subtaction, multiplication, division precisely, for tackling the precision issue",
+  "description": "Calculate addition, subtraction, multiplication, division precisely, for tackling the precision issue",
   "keywords": [
     "long",
     "float",
@@ -10,7 +10,7 @@
     "precision",
     "calculator",
     "addition",
-    "subtaction",
+    "subtraction",
     "multiplication",
     "division"
   ],
