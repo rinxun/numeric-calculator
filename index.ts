@@ -222,8 +222,8 @@ class Calculator {
   // #region Constructor
   /**
    * @constructor
-   * @param {IOperand|undefined} operand initial operand
-   * @param {Config} config Configurations
+   * @param {IOperand|undefined} operand Initial operand
+   * @param {IConfig|undefined} config Configurations
    */
   constructor(operand?: IOperand, config?: IConfig) {
     if (operand !== undefined && operand !== null) {

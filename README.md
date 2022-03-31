@@ -94,7 +94,7 @@ const inst5 = new NC(10, { enableCheckBoundary: true });
 
 
 
-<h4>inst.plus</h4>
+<h4>inst.plus(operands: IOperand[])</h4>
 
 ```typescript
 const result = new NC().plus(2.134).toPrecision(); // 2.134
@@ -105,7 +105,7 @@ const result = new NC(10).plus(2.1341, '3.09', 0.65).toPrecision(); // => 10+2.1
 
 
 
-<h4>inst.minus</h4>
+<h4>inst.minus(operands: IOperand[])</h4>
 
 ```typescript
 const result = new NC().minus(0.4).toPrecision(); // 0.4
@@ -116,7 +116,7 @@ const result = new NC(-2).minus(0.25, 1.5, 3.498).toPrecision(); // -2-0.25-1.5-
 
 
 
-<h4>inst.times</h4>
+<h4>inst.times(operands: IOperand[])</h4>
 
 ```typescript
 const result = new NC().times(0.12).toPrecision(); // 0.12
@@ -127,7 +127,7 @@ const result = new NC(3.2).times(0.12, '100', 5).toPrecision(); // => 3.2*0.12*1
 
 
 
-<h4>inst.divide</h4>
+<h4>inst.divide(operands: IOperand[])</h4>
 
 ```typescript
 const result = new NC().divide(3).toPrecision(); // 3
@@ -138,7 +138,7 @@ const result = new NC(-1000).divide(100, '20', 2).toPrecision(); // -1000/100/20
 
 
 
-<h4>inst.toPrecision</h4>
+<h4>inst.toPrecision(precision?: number)</h4>
 
 ```typescript
 const result = new NC(1.2345).toPrecision(); // 1.2345
@@ -157,3 +157,6 @@ const result = new NC(10).plus(new NC().times(2, 4), '6').divide(new NC(12).minu
 
 
 
+<h2>Changelog</h2>
+
+If you have recently updated, please read the [changelog](https://github.com/rinxun/numeric-calculator/releases) for details of what has changed.
