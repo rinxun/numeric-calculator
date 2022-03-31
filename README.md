@@ -48,7 +48,8 @@ This project is licensed under the terms of the [MIT license](https://github.com
 
     - ```js
       config = {
-        precision?: number, // global precision, default to 15
+        precision?: number, // global default precision, default to 15, should be in the range 0 - 20, effects `toPrecision` when `toPrecision` has no args
+        fractionDigits?: number, // global default decimal length, default to 2, should be in the range 0 - 20, effects `toFixed` when `toFixed` has no args
         enableCheckBoundary?: boolean // if true, it will check if the value is out of the safe boundary
       }
       ```
@@ -64,6 +65,7 @@ The instance supports chain operations.
 - `times(operands: IOperand[]) => instance`
 - `divide(operands: IOperand[]) => instance`
 - `toPrecision(precision?: number) => number`
+- `toFixed(fractionDigits?: number) => string`
 
 
 
@@ -73,7 +75,7 @@ The instance supports chain operations.
 
 ```typescript
 // CommonJS
-const NC = require('@rinxun/numeric-calculator');
+const { default: NC } = require('@rinxun/numeric-calculator');
 
 // ES6 
 import NC from '@rinxun/numeric-calculator';
@@ -145,6 +147,19 @@ const result = new NC(-1000).divide(100, '20', 2).toPrecision(); // -1000/100/20
 const result = new NC(1.2345).toPrecision(); // 1.2345
 const result = new NC(1.2345).toPrecision(4); // 1.234
 const result = new NC(1.2e-2).toPrecision(); // 0.012
+```
+
+
+
+<h4>inst.toFixed(fractionDigits?: number)</h4>
+
+Follow the [Banker's Rounding rules](https://rounding.to/understanding-the-bankers-rounding/)
+
+```typescript
+const result = new NC(1.2345).toFixed(); // '1.23'
+const result = new NC(1.2345).toFixed(3); // '1.234'
+const result = new NC(1.2346).toFixed(3); // '1.235'
+const result = new NC(1.2e-2).toFixed(); // 0.01
 ```
 
 

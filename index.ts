@@ -1,5 +1,6 @@
 type IConfig = {
   precision?: number;
+  fractionDigits?: number;
   enableCheckBoundary?: boolean;
 };
 
@@ -17,7 +18,16 @@ class Calculator {
    * @description global register for temporary results, core for chaining operations
    */
   private _VALUE: number | undefined = undefined;
+  /**
+   * @private
+   * @description global default precision, default to 15, should be in the range 0 - 20, effects `toPrecision` when `toPrecision` has no args
+   */
   private _precision: number = 15;
+  /**
+   * @private
+   * @description global default decimal length, default to 2, should be in the range 0 - 20, effects `toFixed` when `toFixed` has no args
+   */
+  private _fractionDigits: number = 2;
   /**
    * @private
    * @description for debugging, if true, it will check if the value is out of the safe boundary
@@ -76,6 +86,17 @@ class Calculator {
    */
   private processPrecision(num: number, precision?: number) {
     return +parseFloat(num.toPrecision(precision || this._precision || 15));
+  }
+
+  /**
+   * get the fixed-point value
+   * @param {number} num numeric
+   * @param {number} fractionDigits default 2
+   */
+  private processFixed(num: number, fractionDigits?: number) {
+    return this.processPrecision(num).toFixed(
+      fractionDigits || this._fractionDigits || 2
+    );
   }
 
   /**
@@ -235,6 +256,9 @@ class Calculator {
       if (config.precision !== undefined) {
         this._precision = config.precision;
       }
+      if (config.fractionDigits !== undefined) {
+        this._fractionDigits = config.fractionDigits;
+      }
       if (config.enableCheckBoundary) {
         this._enableCheckBoundary = config.enableCheckBoundary;
       }
@@ -245,11 +269,20 @@ class Calculator {
   // #region Public Functions
   /**
    * @description parse the result to precise numeric
-   * @param precision default to 15
+   * @param {number} precision default to 15
    * @returns {number} precise result
    */
-  public toPrecision(precision?: number) {
+  public toPrecision(precision?: number): number {
     return this.processPrecision(this._VALUE || 0, precision);
+  }
+
+  /**
+   * @description parse the result to fixed-point value
+   * @param {number} fractionDigits default to 2, should be in the range 0 - 20
+   * @returns {string} fixed-point result
+   */
+  public toFixed(fractionDigits?: number): string {
+    return this.processFixed(this._VALUE || 0, fractionDigits);
   }
 
   /**
