@@ -1,4 +1,5 @@
 type IConfig = {
+  precision?: number;
   enableCheckBoundary?: boolean;
 };
 
@@ -16,6 +17,7 @@ class Calculator {
    * @description global register for temporary results, core for chaining operations
    */
   private _VALUE: number | undefined = undefined;
+  private _precision: number = 15;
   /**
    * @private
    * @description for debugging, if true, it will check if the value is out of the safe boundary
@@ -73,7 +75,7 @@ class Calculator {
    * @param {number} precision default 15
    */
   private processPrecision(num: number, precision?: number) {
-    return +parseFloat(num.toPrecision(precision || 15));
+    return +parseFloat(num.toPrecision(precision || this._precision || 15));
   }
 
   /**
@@ -230,6 +232,9 @@ class Calculator {
       this._VALUE = this.parseOperandToNum(operand);
     }
     if (config) {
+      if (config.precision !== undefined) {
+        this._precision = config.precision;
+      }
       if (config.enableCheckBoundary) {
         this._enableCheckBoundary = config.enableCheckBoundary;
       }

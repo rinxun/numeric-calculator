@@ -48,6 +48,7 @@ This project is licensed under the terms of the [MIT license](https://github.com
 
     - ```js
       config = {
+        precision?: number, // global precision, default to 15
         enableCheckBoundary?: boolean // if true, it will check if the value is out of the safe boundary
       }
       ```
