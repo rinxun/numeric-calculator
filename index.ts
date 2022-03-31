@@ -2,6 +2,8 @@ type IConfig = {
   enableCheckBoundary?: boolean;
 };
 
+type IOperand = Calculator | number | string;
+
 /**
  * @description Calculate addition, subtaction, multiplication, division precisely, for tackling the precision issue
  * @author Janden Ma
@@ -38,7 +40,7 @@ class Calculator {
   }
 
   /**
-   * get the length of the mantissa of the numeric
+   * @description get the length of the mantissa of the numeric
    * @param {number} num numeric
    */
   private getMantissaLen(num: number) {
@@ -48,6 +50,21 @@ class Calculator {
     const decimals = exponentPrefix.split(".")[1] || ""; // decimals before e (eg: 1337983389)
     const len = decimals.length - +exponentSuffix;
     return len > 0 ? len : 0;
+  }
+
+  /**
+   * @description according to the type of operand, parse it to number
+   * @param {IOperand} operand operand
+   */
+  private parseOperandToNum(operand: IOperand) {
+    if (operand instanceof Calculator) {
+      return operand._VALUE;
+    } else if (typeof operand === "number") {
+      return operand;
+    } else {
+      const val = Number(operand);
+      return Number.isNaN(val) ? 0 : val;
+    }
   }
 
   /**
@@ -157,46 +174,60 @@ class Calculator {
 
   /**
    * core processor for times
-   * @param {number[]} nums operands
+   * @param {IOperand[]} operands operands
    * @param {"plus" | "minus" | "times" | "divide"} op operator
    */
   private calculate(
-    nums: Array<number>,
+    operands: Array<IOperand>,
     op: "plus" | "minus" | "times" | "divide"
   ) {
-    const operands = [...nums];
+    const values = [...operands];
     let firstOperand = this._VALUE;
+
+    const analyzeFirstOperand = (): number => {
+      const parsedVal = this.parseOperandToNum(values[0]);
+      values.shift();
+      if (parsedVal === undefined) {
+        return analyzeFirstOperand();
+      }
+      return parsedVal;
+    };
+
     if (firstOperand === undefined) {
-      firstOperand = operands[0];
-      operands.shift();
+      firstOperand = analyzeFirstOperand();
     }
-    const result = operands.reduce((prev, operand) => {
+    const result = values.reduce((prevOperand, currOperand) => {
+      const prev = this.parseOperandToNum(prevOperand)!;
+      const current = this.parseOperandToNum(currOperand);
+      if (!current) {
+        return prev;
+      }
       switch (op) {
         case "plus":
-          return this.processPlus(prev, operand);
+          return this.processPlus(prev, current);
         case "minus":
-          return this.processMinus(prev, operand);
+          return this.processMinus(prev, current);
         case "times":
-          return this.processTimes(prev, operand);
+          return this.processTimes(prev, current);
         case "divide":
-          return this.processDivide(prev, operand);
+          return this.processDivide(prev, current);
         default:
-          return prev;
+          return prev!;
       }
     }, firstOperand);
-    this._VALUE = result;
+    this._VALUE = this.parseOperandToNum(result);
   }
   // #endregion
 
   // #region Constructor
   /**
    * @constructor
-   * @param {number|undefined} num initial operand
+   * @param {IOperand|undefined} operand initial operand
    * @param {Config} config Configurations
    */
-  constructor(num?: number, config?: IConfig) {
-    if (num !== undefined && num !== null) {
-      this._VALUE = num;
+  constructor(operand?: IOperand, config?: IConfig) {
+    if (operand !== undefined && operand !== null) {
+      this._VALUE = this.parseOperandToNum(operand);
     }
     if (config) {
       if (config.enableCheckBoundary) {
@@ -218,37 +249,37 @@ class Calculator {
 
   /**
    * @description plus operator
-   * @param {number[]} nums operands
+   * @param {Array<IOperand>} operands operands
    */
-  public plus(...nums: Array<number>) {
-    this.calculate(nums, "plus");
+  public plus(...operands: Array<IOperand>) {
+    this.calculate(operands, "plus");
     return this;
   }
 
   /**
    * @description minus operator
-   * @param {number[]} nums operands
+   * @param {Array<IOperand>} operands operands
    */
-  public minus(...nums: Array<number>) {
-    this.calculate(nums, "minus");
+  public minus(...operands: Array<IOperand>) {
+    this.calculate(operands, "minus");
     return this;
   }
 
   /**
    * @description times operator
-   * @param {number[]} nums operands
+   * @param {Array<IOperand>} operands operands
    */
-  public times(...nums: Array<number>) {
-    this.calculate(nums, "times");
+  public times(...operands: Array<IOperand>) {
+    this.calculate(operands, "times");
     return this;
   }
 
   /**
    * @description divide operator
-   * @param {number[]} nums operands
+   * @param {Array<IOperand>} operands operands
    */
-  public divide(...nums: Array<number>) {
-    this.calculate(nums, "divide");
+  public divide(...operands: Array<IOperand>) {
+    this.calculate(operands, "divide");
     return this;
   }
   // #endregion

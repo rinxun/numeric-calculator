@@ -35,11 +35,12 @@ This project is licensed under the terms of the [MIT license](https://github.com
 
 <h2>Constructor</h2>
 
-- `new NC(number: number, config: object)`
+- `new NC(operand: IOperand, config: IConfig)`
 
   - number: Initial numeric
 
     - optional
+    - `type IOperand = instance | number | string`
 
   - config: Configurations 
 
@@ -57,10 +58,10 @@ This project is licensed under the terms of the [MIT license](https://github.com
 
 The instance supports chain operations.
 
-- `plus(operands: number[]) => instance `
-- `minus(operands: number[]) => instance`
-- `times(operands: number[]) => instance`
-- `divide(operands: number[]) => instance`
+- `plus(operands: IOperand[]) => instance `
+- `minus(operands: IOperand[]) => instance`
+- `times(operands: IOperand[]) => instance`
+- `divide(operands: IOperand[]) => instance`
 - `toPrecision(precision?: number) => number`
 
 
@@ -85,8 +86,10 @@ import NC from '@rinxun/numeric-calculator';
 const inst1 = new NC(); 
 // or with initial numeric
 const inst2 = new NC(10); 
+const inst3 = new NC('10'); 
+const inst4 = new NC(new NC(10)); 
 // or with config
-const inst3 = new NC(10, { enableCheckBoundary: true }); 
+const inst5 = new NC(10, { enableCheckBoundary: true }); 
 ```
 
 
@@ -95,9 +98,9 @@ const inst3 = new NC(10, { enableCheckBoundary: true });
 
 ```typescript
 const result = new NC().plus(2.134).toPrecision(); // 2.134
-const result = new NC().plus(2.1341, 3.09, 0.65).toPrecision(); // 5.8741
-const result = new NC(10).plus(2.134).toPrecision(); // 12.134
-const result = new NC(10).plus(2.1341, 3.09, 0.65).toPrecision(); // 15.8741
+const result = new NC().plus(2.1341, new NC(1.09).plus(2), '0.65').toPrecision(); // => 2.1341+(1.09+2)+0.65 = 5.8741
+const result = new NC(10).plus(2.134).toPrecision(); // => 10+2.134 = 12.134
+const result = new NC(10).plus(2.1341, '3.09', 0.65).toPrecision(); // => 10+2.1341+3.09+0.65 = 15.8741
 ```
 
 
@@ -105,10 +108,10 @@ const result = new NC(10).plus(2.1341, 3.09, 0.65).toPrecision(); // 15.8741
 <h4>inst.minus</h4>
 
 ```typescript
-const result = new NC().minus(0.4).toPrecision(); // -0.6
-const result = new NC().minus(0.25, 1.5, 3.498).toPrecision(); // -4.748
-const result = new NC(2).minus(0.4).toPrecision(); // 1.6
-const result = new NC(-2).minus(0.25, 1.5, 3.498).toPrecision(); // -7.248
+const result = new NC().minus(0.4).toPrecision(); // 0.4
+const result = new NC().minus(0.25, new NC(2.5).minus(1), '3.498').toPrecision(); // => 0.25-(2.5-1)-3.498 -4.748
+const result = new NC(2).minus(0.4).toPrecision(); // => 2-0.4 = 1.6
+const result = new NC(-2).minus(0.25, 1.5, 3.498).toPrecision(); // -2-0.25-1.5-3.498 = -7.248
 ```
 
 
@@ -117,9 +120,9 @@ const result = new NC(-2).minus(0.25, 1.5, 3.498).toPrecision(); // -7.248
 
 ```typescript
 const result = new NC().times(0.12).toPrecision(); // 0.12
-const result = new NC().times(0.12, 100, 5).toPrecision(); // 60
-const result = new NC(-4).times(0.12).toPrecision(); // -0.48
-const result = new NC(3.2).times(0.12, 100, 5).toPrecision(); // 192
+const result = new NC().times(0.12, new NC(8).times(12.5), '5').toPrecision(); // => 0.12*(8*12.5)*5 = 60
+const result = new NC(-4).times(0.12).toPrecision(); // => -4*0.12 = -0.48
+const result = new NC(3.2).times(0.12, '100', 5).toPrecision(); // => 3.2*0.12*100*5 = 192
 ```
 
 
@@ -128,9 +131,9 @@ const result = new NC(3.2).times(0.12, 100, 5).toPrecision(); // 192
 
 ```typescript
 const result = new NC().divide(3).toPrecision(); // 3
-const result = new NC().divide(100, 20, 2).toPrecision(); // 2.5
-const result = new NC(36.12).divide(3).toPrecision(); // 12.04
-const result = new NC(-1000).divide(100, 20, 2).toPrecision(); // -0.25
+const result = new NC().divide(100, new NC(60).divide(3), '2').toPrecision(); // => 100/(60/3)/2 = 2.5
+const result = new NC(36.12).divide(3).toPrecision(); // => 36.12/3 = 12.04
+const result = new NC(-1000).divide(100, '20', 2).toPrecision(); // -1000/100/20/2 = -0.25
 ```
 
 
@@ -148,7 +151,8 @@ const result = new NC(1.2e-2).toPrecision(); // 0.012
 <h4>chain operations</h4>
 
 ```typescript
-const result = new NC(10).plus(2).minus(4).times(2).divide(8).toPrecision(); // 2
+const result = new NC(10).plus(2).minus(4).times(2).divide(8).toPrecision(); // => (10+2-4)*2/8 = 2
+const result = new NC(10).plus(new NC().times(2, 4), '6').divide(new NC(12).minus(4)).toPrecision(); // => (10+(2*4)+6)/(12-4) = 3
 ```
 
 
