@@ -159,7 +159,7 @@ Follow the [Banker's Rounding rules](https://rounding.to/understanding-the-banke
 const result = new NC(1.2345).toFixed(); // '1.23'
 const result = new NC(1.2345).toFixed(3); // '1.234'
 const result = new NC(1.2346).toFixed(3); // '1.235'
-const result = new NC(1.2e-2).toFixed(); // 0.01
+const result = new NC(1.2e-2).toFixed(); // '0.01'
 ```
 
 
