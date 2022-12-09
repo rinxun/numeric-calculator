@@ -105,12 +105,12 @@ class Calculator {
    * @param {number} num2 operand 2
    */
   private processTimes(num1: number, num2: number) {
-    const num1MatissaLen = this.getMantissaLen(num1);
-    const num2MatissaLen = this.getMantissaLen(num2);
-    const amplifyingNum1 = num1 * Math.pow(10, num1MatissaLen);
-    const amplifyingNum2 = num2 * Math.pow(10, num2MatissaLen);
+    const num1MantissaLen = this.getMantissaLen(num1);
+    const num2MantissaLen = this.getMantissaLen(num2);
+    const amplifyingNum1 = num1 * Math.pow(10, num1MantissaLen);
+    const amplifyingNum2 = num2 * Math.pow(10, num2MantissaLen);
 
-    const magnification = Math.pow(10, num1MatissaLen + num2MatissaLen);
+    const magnification = Math.pow(10, num1MantissaLen + num2MantissaLen);
 
     this.checkBoundary(amplifyingNum1);
     this.checkBoundary(amplifyingNum2);
@@ -128,13 +128,13 @@ class Calculator {
    * @param {number} num2 operand 2
    */
   private processDivide(num1: number, num2: number) {
-    const num1MatissaLen = this.getMantissaLen(num1);
-    const num2MatissaLen = this.getMantissaLen(num2);
+    const num1MantissaLen = this.getMantissaLen(num1);
+    const num2MantissaLen = this.getMantissaLen(num2);
 
-    const amplifyingNum1 = num1 * Math.pow(10, num1MatissaLen);
-    const amplifyingNum2 = num2 * Math.pow(10, num2MatissaLen);
+    const amplifyingNum1 = num1 * Math.pow(10, num1MantissaLen);
+    const amplifyingNum2 = num2 * Math.pow(10, num2MantissaLen);
 
-    const magnification = Math.pow(10, num2MatissaLen - num1MatissaLen);
+    const magnification = Math.pow(10, num2MantissaLen - num1MantissaLen);
 
     this.checkBoundary(amplifyingNum1);
     this.checkBoundary(amplifyingNum2);
@@ -153,10 +153,10 @@ class Calculator {
    * @param {number} num2 operand 2
    */
   private processMinus(num1: number, num2: number) {
-    const num1MatissaLen = this.getMantissaLen(num1);
-    const num2MatissaLen = this.getMantissaLen(num2);
-    const maxMatissaLen = Math.max(num1MatissaLen, num2MatissaLen);
-    const magnification = Math.pow(10, maxMatissaLen);
+    const num1MantissaLen = this.getMantissaLen(num1);
+    const num2MantissaLen = this.getMantissaLen(num2);
+    const maxMantissaLen = Math.max(num1MantissaLen, num2MantissaLen);
+    const magnification = Math.pow(10, maxMantissaLen);
 
     const amplifyingNum1 = this.processTimes(num1, magnification);
     const amplifyingNum2 = this.processTimes(num2, magnification);
@@ -177,10 +177,10 @@ class Calculator {
    * @param {number} num2 operand 2
    */
   private processPlus(num1: number, num2: number) {
-    const num1MatissaLen = this.getMantissaLen(num1);
-    const num2MatissaLen = this.getMantissaLen(num2);
-    const maxMatissaLen = Math.max(num1MatissaLen, num2MatissaLen);
-    const magnification = Math.pow(10, maxMatissaLen);
+    const num1MantissaLen = this.getMantissaLen(num1);
+    const num2MantissaLen = this.getMantissaLen(num2);
+    const maxMantissaLen = Math.max(num1MantissaLen, num2MantissaLen);
+    const magnification = Math.pow(10, maxMantissaLen);
 
     const amplifyingNum1 = this.processTimes(num1, magnification);
     const amplifyingNum2 = this.processTimes(num2, magnification);
@@ -222,18 +222,36 @@ class Calculator {
     const result = values.reduce((prevOperand, currOperand) => {
       const prev = this.parseOperandToNum(prevOperand)!;
       const current = this.parseOperandToNum(currOperand);
-      if (!current) {
+
+      if (current === undefined) {
         return prev;
       }
+
       switch (op) {
-        case "plus":
+        case "plus": {
+          if (current === 0) {
+            return prev;
+          }
           return this.processPlus(prev, current);
-        case "minus":
+        }
+        case "minus": {
+          if (current === 0) {
+            return prev;
+          }
           return this.processMinus(prev, current);
-        case "times":
+        }
+        case "times": {
+          if (current === 0) {
+            return 0;
+          }
           return this.processTimes(prev, current);
-        case "divide":
+        }
+        case "divide": {
+          if (current === 0) {
+            return 0;
+          }
           return this.processDivide(prev, current);
+        }
         default:
           return prev!;
       }
