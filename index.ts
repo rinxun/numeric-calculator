@@ -196,6 +196,24 @@ class Calculator {
   }
 
   /**
+   * core processor for round
+   * @param {number} num numeric
+   * @param {number} fractionDigits default 2
+   */
+  private processRound(num: number, fractionDigits?: number) {
+    const magnification = Math.pow(
+      10,
+      fractionDigits || this._fractionDigits || 2
+    );
+
+    const amplifyingResult = this.processTimes(num, magnification);
+
+    this.checkBoundary(amplifyingResult);
+
+    return this.processDivide(Math.round(num), magnification);
+  }
+
+  /**
    * core processor for times
    * @param {IOperand[]} operands operands
    * @param {"plus" | "minus" | "times" | "divide"} op operator
@@ -337,6 +355,24 @@ class Calculator {
   public divide(...operands: Array<IOperand>) {
     this.calculate(operands, "divide");
     return this;
+  }
+
+  /**
+   * 
+   * @param {number} fractionDigits default to 2, should be in the range 0 - 20
+   * @returns {number} rounded result
+   */
+  public round(fractionDigits?: number) {
+    const magnification = Math.pow(
+      10,
+      fractionDigits || this._fractionDigits || 2
+    );
+
+    const amplifyingResult = this.processTimes(this._VALUE || 0, magnification);
+
+    this.checkBoundary(amplifyingResult);
+
+    return this.processDivide(Math.round(amplifyingResult), magnification);
   }
   // #endregion
 }
