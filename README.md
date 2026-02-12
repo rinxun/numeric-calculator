@@ -64,6 +64,7 @@ The instance supports chain operations.
 - `minus(operands: IOperand[]) => instance`
 - `times(operands: IOperand[]) => instance`
 - `divide(operands: IOperand[]) => instance`
+- `round(fractionDigits?: number) => number`
 - `toPrecision(precision?: number) => number`
 - `toFixed(fractionDigits?: number) => string`
 
@@ -137,6 +138,17 @@ const result = new NC().divide(3).toPrecision(); // 3
 const result = new NC().divide(100, new NC(60).divide(3), '2').toPrecision(); // => 100/(60/3)/2 = 2.5
 const result = new NC(36.12).divide(3).toPrecision(); // => 36.12/3 = 12.04
 const result = new NC(-1000).divide(100, '20', 2).toPrecision(); // -1000/100/20/2 = -0.25
+```
+
+
+
+<h4>inst.round(fractionDigits?: number)</h4>
+
+``` typescript
+const result = new NC().round(3); // 0
+const result = new NC(5.255).round(2); // 5.26
+const result = new NC(7.65).times(16.5).round(2); // => 7.65 * 16.5 = 126.225 ≈ 126.23
+const result = new NC(26.05).times(16.5).round(2); // => 26.05 * 16.5 = 429.825 ≈ 429.83
 ```
 
 
