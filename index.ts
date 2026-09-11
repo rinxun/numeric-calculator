@@ -4,6 +4,18 @@ type IConfig = {
   enableCheckBoundary?: boolean;
 };
 
+type IRoundOptions = {
+  /**
+   * @description when true, nudges the amplified value by a few ULPs relative
+   * to its own magnitude before rounding, so that binary floating-point
+   * representation dust does not flip values sitting exactly on a rounding
+   * boundary. Use it when the input may come from plain float arithmetic
+   * upstream, e.g. a true 95.015 arriving as 95.01499999999942. Defaults to
+   * false, which keeps the exact-decimal behavior of the represented value.
+   */
+  snap?: boolean;
+};
+
 type IOperand = Calculator | number | string;
 
 /**
@@ -360,9 +372,10 @@ class Calculator {
   /**
    * 
    * @param {number} fractionDigits default to 2, should be in the range 0 - 20
+   * @param {IRoundOptions} options rounding options, see {@link IRoundOptions.snap}
    * @returns {number} rounded result
    */
-  public round(fractionDigits?: number) {
+  public round(fractionDigits?: number, options?: IRoundOptions) {
     const magnification = Math.pow(
       10,
       fractionDigits || this._fractionDigits || 2
@@ -372,7 +385,18 @@ class Calculator {
 
     this.checkBoundary(amplifyingResult);
 
-    return this.processDivide(Math.round(amplifyingResult), magnification);
+    // Dust observed in real pipelines reaches a few dozen ULPs (each float op
+    // distorts by at most 0.5 ULP), so 64x headroom. This stays safely below
+    // half an amplified unit at any magnitude (it scales with the value), and
+    // assumes inputs are meaningful well beyond ULP precision.
+    const tolerance = options?.snap
+      ? Math.abs(amplifyingResult) * Number.EPSILON * 64
+      : 0;
+
+    return this.processDivide(
+      Math.round(amplifyingResult + tolerance),
+      magnification
+    );
   }
   // #endregion
 }
