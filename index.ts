@@ -4,6 +4,17 @@ type IConfig = {
   enableCheckBoundary?: boolean;
 };
 
+type IRoundOptions = {
+  /**
+   * @description tolerance nudged into the amplified value (i.e. in the unit of
+   * the last target decimal place) before rounding. Defaults to 0, which keeps
+   * the exact-decimal behavior. Pass a tiny value (e.g. 1e-6) when the input
+   * may carry binary floating-point representation dust, e.g. a true 95.015
+   * arriving as 95.01499999999942 after float arithmetic upstream.
+   */
+  epsilon?: number;
+};
+
 type IOperand = Calculator | number | string;
 
 /**
@@ -360,9 +371,10 @@ class Calculator {
   /**
    * 
    * @param {number} fractionDigits default to 2, should be in the range 0 - 20
+   * @param {IRoundOptions} options rounding options, see {@link IRoundOptions}
    * @returns {number} rounded result
    */
-  public round(fractionDigits?: number) {
+  public round(fractionDigits?: number, options?: IRoundOptions) {
     const magnification = Math.pow(
       10,
       fractionDigits || this._fractionDigits || 2
@@ -372,7 +384,12 @@ class Calculator {
 
     this.checkBoundary(amplifyingResult);
 
-    return this.processDivide(Math.round(amplifyingResult), magnification);
+    const epsilon = options?.epsilon || 0;
+
+    return this.processDivide(
+      Math.round(amplifyingResult + epsilon),
+      magnification
+    );
   }
   // #endregion
 }
