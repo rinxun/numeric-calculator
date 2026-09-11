@@ -6,13 +6,14 @@ type IConfig = {
 
 type IRoundOptions = {
   /**
-   * @description tolerance nudged into the amplified value (i.e. in the unit of
-   * the last target decimal place) before rounding. Defaults to 0, which keeps
-   * the exact-decimal behavior. Pass a tiny value (e.g. 1e-6) when the input
-   * may carry binary floating-point representation dust, e.g. a true 95.015
-   * arriving as 95.01499999999942 after float arithmetic upstream.
+   * @description when true, nudges the amplified value by a few ULPs relative
+   * to its own magnitude before rounding, so that binary floating-point
+   * representation dust does not flip values sitting exactly on a rounding
+   * boundary. Use it when the input may come from plain float arithmetic
+   * upstream, e.g. a true 95.015 arriving as 95.01499999999942. Defaults to
+   * false, which keeps the exact-decimal behavior of the represented value.
    */
-  epsilon?: number;
+  snap?: boolean;
 };
 
 type IOperand = Calculator | number | string;
@@ -371,7 +372,7 @@ class Calculator {
   /**
    * 
    * @param {number} fractionDigits default to 2, should be in the range 0 - 20
-   * @param {IRoundOptions} options rounding options, see {@link IRoundOptions}
+   * @param {IRoundOptions} options rounding options, see {@link IRoundOptions.snap}
    * @returns {number} rounded result
    */
   public round(fractionDigits?: number, options?: IRoundOptions) {
@@ -384,10 +385,16 @@ class Calculator {
 
     this.checkBoundary(amplifyingResult);
 
-    const epsilon = options?.epsilon || 0;
+    // Dust observed in real pipelines reaches a few dozen ULPs (each float op
+    // distorts by at most 0.5 ULP), so 64x headroom. This stays safely below
+    // half an amplified unit at any magnitude (it scales with the value), and
+    // assumes inputs are meaningful well beyond ULP precision.
+    const tolerance = options?.snap
+      ? Math.abs(amplifyingResult) * Number.EPSILON * 64
+      : 0;
 
     return this.processDivide(
-      Math.round(amplifyingResult + epsilon),
+      Math.round(amplifyingResult + tolerance),
       magnification
     );
   }

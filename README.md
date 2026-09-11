@@ -142,7 +142,7 @@ const result = new NC(-1000).divide(100, '20', 2).toPrecision(); // -1000/100/20
 
 
 
-<h4>inst.round(fractionDigits?: number, options?: IRoundOptions)</h4>
+<h4>inst.round(fractionDigits?: number, options?: { snap?: boolean })</h4>
 
 ``` typescript
 const result = new NC().round(3); // 0
@@ -151,13 +151,13 @@ const result = new NC(7.65).times(16.5).round(2); // => 7.65 * 16.5 = 126.225 �
 const result = new NC(26.05).times(16.5).round(2); // => 26.05 * 16.5 = 429.825 ≈ 429.83
 ```
 
-`options.epsilon` (default `0`) nudges the amplified value before rounding, in the unit of the last target decimal place. It exists for inputs that carry binary floating-point representation dust: after plain float arithmetic upstream, a true `95.015` can arrive as `95.01499999999942`, and exact-decimal rounding of the represented value then rounds down. A tiny epsilon snaps only values within that distance of the boundary:
+`options.snap` (default `false`) makes rounding tolerant to binary floating-point representation dust. After plain float arithmetic upstream, a true `95.015` can arrive as `95.01499999999942`, and exact-decimal rounding of the *represented* value then rounds down, disagreeing with the true value. With `snap`, the amplified value is nudged by a few ULPs relative to its own magnitude before `Math.round`, so only values sitting exactly on a rounding boundary are affected — everything beyond a few ULPs of the boundary keeps its exact-decimal result, and there is no magic number to tune:
 
 ``` typescript
 const dust = 2959.9649999999997; // true value 2959.965, distorted by float subtraction upstream
 const result = new NC(dust).round(2); // 2959.96 — exact decimal of the represented value
-const result = new NC(dust).round(2, { epsilon: 1e-6 }); // 2959.97 — matches the true half-up value
-const result = new NC(719.6446).round(2, { epsilon: 1e-6 }); // 719.64 — values beyond epsilon of the boundary are untouched
+const result = new NC(dust).round(2, { snap: true }); // 2959.97 — matches the true half-up value
+const result = new NC(719.6446).round(2, { snap: true }); // 719.64 — values beyond a few ULPs of the boundary are untouched
 ```
 
 
