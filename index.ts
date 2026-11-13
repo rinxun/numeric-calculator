@@ -6,12 +6,13 @@ type IConfig = {
 
 type IRoundOptions = {
   /**
-   * @description when true, nudges the amplified value by a few ULPs relative
-   * to its own magnitude before rounding, so that binary floating-point
-   * representation dust does not flip values sitting exactly on a rounding
-   * boundary. Use it when the input may come from plain float arithmetic
-   * upstream, e.g. a true 95.015 arriving as 95.01499999999942. Defaults to
-   * false, which keeps the exact-decimal behavior of the represented value.
+   * @description when true, nudges the amplified value away from zero by up to
+   * 64 ULPs of its own magnitude (never more than a quarter of the last kept
+   * digit) before rounding, so that binary floating-point representation dust
+   * does not flip values sitting exactly on a rounding boundary. Use it when
+   * the input may come from plain float arithmetic upstream, e.g. a true 95.015
+   * arriving as 95.01499999999942. Defaults to false. Either way, halves round
+   * away from zero in both signs.
    */
   snap?: boolean;
 };
@@ -208,24 +209,6 @@ class Calculator {
   }
 
   /**
-   * core processor for round
-   * @param {number} num numeric
-   * @param {number} fractionDigits default 2
-   */
-  private processRound(num: number, fractionDigits?: number) {
-    const magnification = Math.pow(
-      10,
-      fractionDigits || this._fractionDigits || 2
-    );
-
-    const amplifyingResult = this.processTimes(num, magnification);
-
-    this.checkBoundary(amplifyingResult);
-
-    return this.processDivide(Math.round(num), magnification);
-  }
-
-  /**
    * core processor for times
    * @param {IOperand[]} operands operands
    * @param {"plus" | "minus" | "times" | "divide"} op operator
@@ -385,16 +368,30 @@ class Calculator {
 
     this.checkBoundary(amplifyingResult);
 
+    // Round the magnitude, then restore the sign, so a negative value rounds as
+    // the mirror of its positive (-0.125 -> -0.13, like 0.125 -> 0.13) and the
+    // snap nudge moves it away from zero just as it does for positives.
+    const magnitude = Math.abs(amplifyingResult);
+
     // Dust observed in real pipelines reaches a few dozen ULPs (each float op
-    // distorts by at most 0.5 ULP), so 64x headroom. This stays safely below
-    // half an amplified unit at any magnitude (it scales with the value), and
-    // assumes inputs are meaningful well beyond ULP precision.
+    // distorts by at most 0.5 ULP), so 64x headroom: snap treats anything that
+    // close below a half as the half. 64 ULPs grow with the value and pass half
+    // an amplified unit at about 3.5e13 (3.5e11 at 2 digits), where snap would
+    // round whole numbers up (4e11 -> 400000000000.01). Capping the nudge at a
+    // quarter unit keeps values more than a quarter unit below a half untouched
+    // at any magnitude. The cap binds from about 1.76e13 (1.76e11 at 2 digits);
+    // there a value exactly a quarter unit below a half still moves
+    // (200000000000.0625 -> .07). A cap just under 0.25 or 0.5 does not tighten
+    // this, since the float addition itself rounds to the nearer representable
+    // value (4e13 + 0.4999999999999998 === 4e13 + 0.5).
     const tolerance = options?.snap
-      ? Math.abs(amplifyingResult) * Number.EPSILON * 64
+      ? Math.min(magnitude * Number.EPSILON * 64, 0.25)
       : 0;
 
+    const rounded = Math.round(magnitude + tolerance);
+
     return this.processDivide(
-      Math.round(amplifyingResult + tolerance),
+      amplifyingResult < 0 ? -rounded : rounded,
       magnification
     );
   }
