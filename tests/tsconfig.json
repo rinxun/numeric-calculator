@@ -1,0 +1,24 @@
+{
+  // Compiles the tests, and the index.ts they import, into ../build for
+  // `node --test`. Kept apart from the library build (../tsconfig.json, ES5):
+  // the tests need ES2020 for BigInt literals.
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "rootDir": "..",
+    "outDir": "../build",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "declaration": false,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["../node_modules/@types"],
+    "types": ["node"]
+  },
+  "include": ["./**/*.ts"]
+}

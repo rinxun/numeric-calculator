@@ -3,19 +3,16 @@
  * tests. Nothing here calls the library, so expected values never come from the
  * code under test.
  */
-const assert = require("node:assert/strict");
+import { strict as assert } from "node:assert";
 
 // #region Exact decimals
-/**
- * An exact decimal number: value = unscaled / 10^scale, unscaled is a signed BigInt.
- * @typedef {{ unscaled: bigint, scale: number }} Decimal
- */
+/** An exact decimal number: value = unscaled / 10^scale. */
+export type Decimal = { unscaled: bigint; scale: number };
 
-const abs = (n) => (n < 0n ? -n : n);
-const pow10 = (n) => 10n ** BigInt(n);
+const abs = (n: bigint): bigint => (n < 0n ? -n : n);
+const pow10 = (n: number): bigint => 10n ** BigInt(n);
 
-/** @returns {Decimal} */
-function parseDecimal(str) {
+export function parseDecimal(str: string): Decimal {
   const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(str);
   if (!match) throw new Error(`not a plain decimal: ${str}`);
   const fraction = match[3] || "";
@@ -24,28 +21,28 @@ function parseDecimal(str) {
 }
 
 /** Rescale to a larger scale without changing the value. */
-function rescale(dec, scale) {
+function rescale(dec: Decimal, scale: number): Decimal {
   return { unscaled: dec.unscaled * pow10(scale - dec.scale), scale };
 }
 
-/** @returns {Decimal} exact a + b */
-function addDecimal(a, b) {
+/** Exact a + b. */
+export function addDecimal(a: Decimal, b: Decimal): Decimal {
   const scale = Math.max(a.scale, b.scale);
   return { unscaled: rescale(a, scale).unscaled + rescale(b, scale).unscaled, scale };
 }
 
-/** @returns {Decimal} exact a - b */
-function subtractDecimal(a, b) {
+/** Exact a - b. */
+export function subtractDecimal(a: Decimal, b: Decimal): Decimal {
   return addDecimal(a, { unscaled: -b.unscaled, scale: b.scale });
 }
 
-/** @returns {Decimal} exact a * b */
-function multiplyDecimal(a, b) {
+/** Exact a * b. */
+export function multiplyDecimal(a: Decimal, b: Decimal): Decimal {
   return { unscaled: a.unscaled * b.unscaled, scale: a.scale + b.scale };
 }
 
 /** Decimal string for unscaled / 10^scale; scale may be negative. */
-function formatDecimal(unscaled, scale) {
+function formatDecimal(unscaled: bigint, scale: number): string {
   const negative = unscaled < 0n;
   let digits = abs(unscaled).toString();
   if (scale <= 0) {
@@ -58,7 +55,7 @@ function formatDecimal(unscaled, scale) {
 }
 
 /** Drop `drop` trailing digits of a non-negative integer, rounding half away from zero. */
-function dropDigitsHalfAway(magnitude, drop) {
+function dropDigitsHalfAway(magnitude: bigint, drop: number): bigint {
   if (drop <= 0) return magnitude * pow10(-drop);
   const divisor = pow10(drop);
   const quotient = magnitude / divisor;
@@ -66,14 +63,14 @@ function dropDigitsHalfAway(magnitude, drop) {
 }
 
 /** Round to n fraction digits, halves away from zero. Returns a decimal string. */
-function roundHalfAwayFromZero(dec, n) {
+export function roundHalfAwayFromZero(dec: Decimal, n: number): string {
   const sign = dec.unscaled < 0n ? -1n : 1n;
   const magnitude = dropDigitsHalfAway(abs(dec.unscaled), dec.scale - n);
   return formatDecimal(sign * magnitude, n);
 }
 
 /** Round to p significant digits, halves away from zero. Returns a decimal string. */
-function roundSignificant(dec, p) {
+export function roundSignificant(dec: Decimal, p: number): string {
   const magnitude = abs(dec.unscaled);
   if (magnitude === 0n) return "0";
   const drop = magnitude.toString().length - p;
@@ -88,9 +85,9 @@ function roundSignificant(dec, p) {
  * sits within one double step (2^-52 relative) of a p-digit tie, the other
  * neighbour too. A double cannot tell which side of such a tie the exact value
  * is on, so either answer is as good as the format allows.
- * @returns {string[]} acceptable decimal strings, the nearest first
+ * @returns acceptable decimal strings, the nearest first
  */
-function significantCandidates(dec, p) {
+export function significantCandidates(dec: Decimal, p: number): string[] {
   const magnitude = abs(dec.unscaled);
   const drop = magnitude.toString().length - p;
   const nearest = roundSignificant(dec, p);
@@ -105,8 +102,12 @@ function significantCandidates(dec, p) {
   return [nearest, nearest === up ? down : up];
 }
 
-/** Exact a / b with p + 3 extra digits and a sticky digit, as a Decimal. */
-function divideDecimal(a, b, p) {
+/**
+ * Exact a / b to p + 3 extra digits plus a sticky digit. The sticky digit is 1
+ * when the division leaves a remainder, so a truncated ...5000 that is really
+ * above a half still rounds up; rounding the result to p digits is then exact.
+ */
+export function divideDecimal(a: Decimal, b: Decimal, p: number): Decimal {
   if (b.unscaled === 0n) throw new Error("division by zero");
   const numerator = abs(a.unscaled) * pow10(b.scale);
   const denominator = abs(b.unscaled) * pow10(a.scale);
@@ -118,40 +119,22 @@ function divideDecimal(a, b, p) {
   return { unscaled: negative ? -quotient : quotient, scale: extra + 1 };
 }
 
-/**
- * a / b rounded to p significant digits (halves away from zero), computed from
- * enough exact quotient digits plus a sticky bit, so it is correctly rounded.
- */
-function divideSignificant(a, b, p) {
-  if (b.unscaled === 0n) throw new Error("division by zero");
-  const numerator = abs(a.unscaled) * pow10(b.scale);
-  const denominator = abs(b.unscaled) * pow10(a.scale);
-  const extra =
-    p + 3 + Math.max(0, denominator.toString().length - numerator.toString().length);
-  const scaled = numerator * pow10(extra);
-  let quotient = scaled / denominator;
-  // A non-zero remainder only matters to break an exact-looking half; append a
-  // sticky digit so a truncated ...5000 that is really above half rounds up.
-  const sticky = scaled % denominator !== 0n;
-  quotient = quotient * 10n + (sticky ? 1n : 0n);
-  const negative = a.unscaled < 0n !== b.unscaled < 0n && a.unscaled !== 0n;
-  return roundSignificant({ unscaled: negative ? -quotient : quotient, scale: extra + 1 }, p);
+/** a / b rounded to p significant digits, halves away from zero. */
+export function divideSignificant(a: Decimal, b: Decimal, p: number): string {
+  return roundSignificant(divideDecimal(a, b, p), p);
 }
 
-/** Number of significant digits of a decimal. */
-function significantDigits(dec) {
+/** Number of significant digits of a decimal (trailing zeros not counted). */
+export function significantDigits(dec: Decimal): number {
   const magnitude = abs(dec.unscaled);
   if (magnitude === 0n) return 1;
   return magnitude.toString().replace(/0+$/, "").length || 1;
 }
-
-/** The double that stores a decimal string (the nearest double to it). */
-const toNumber = (str) => Number(str);
 // #endregion
 
 // #region Test helpers
 /** Seeded PRNG (mulberry32), so every run checks the same values. */
-function makeRandom(seed) {
+export function makeRandom(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
     state = (state + 0x6d2b79f5) >>> 0;
@@ -163,7 +146,12 @@ function makeRandom(seed) {
 }
 
 /** Random decimal string: below `maxInt` before the point, exactly `decimals` after it. */
-function randomDecimal(random, maxInt, decimals, allowNegative = true) {
+export function randomDecimal(
+  random: () => number,
+  maxInt: number,
+  decimals: number,
+  allowNegative = true
+): string {
   const intPart = Math.floor(random() * maxInt);
   let fraction = "";
   for (let i = 0; i < decimals; i++) fraction += Math.floor(random() * 10);
@@ -171,18 +159,20 @@ function randomDecimal(random, maxInt, decimals, allowNegative = true) {
   return `${sign}${intPart}${decimals ? `.${fraction}` : ""}`;
 }
 
+/** What a check returns: one expected value, or several acceptable ones (nearest first). */
+export type Check = { actual: unknown; expected: unknown };
+
 /**
  * Run `check` on every case and fail once with the first few mismatches, so a
  * failure shows concrete inputs instead of only a count.
  */
-function expectAll(cases, check) {
-  const failures = [];
+export function expectAll<C extends object>(cases: Iterable<C>, check: (c: C) => Check): void {
+  const failures: object[] = [];
   let total = 0;
   for (const c of cases) {
     total++;
-    // `expected` is one value, or an array of acceptable values (nearest first).
     const { actual, expected } = check(c);
-    const accepted = Array.isArray(expected) ? expected : [expected];
+    const accepted: unknown[] = Array.isArray(expected) ? expected : [expected];
     if (!accepted.some((e) => Object.is(actual, e))) {
       failures.push({ ...c, actual, expected: accepted.length === 1 ? accepted[0] : accepted });
     }
@@ -195,20 +185,3 @@ function expectAll(cases, check) {
   );
 }
 // #endregion
-
-module.exports = {
-  parseDecimal,
-  addDecimal,
-  subtractDecimal,
-  multiplyDecimal,
-  roundHalfAwayFromZero,
-  roundSignificant,
-  significantCandidates,
-  divideDecimal,
-  divideSignificant,
-  significantDigits,
-  toNumber,
-  makeRandom,
-  randomDecimal,
-  expectAll,
-};

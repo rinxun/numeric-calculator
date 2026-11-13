@@ -38,17 +38,20 @@
   },
   "scripts": {
     "build": "./node_modules/.bin/tsc",
-    "test": "./node_modules/.bin/tsc > /dev/null && node --test tests/*.test.js"
+    "pretest": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
+    "test": "./node_modules/.bin/tsc -p tests && node --test build/tests/*.test.js"
   },
   "files": [
     "*.js",
     "*.d.ts",
     "package.json",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "!tests",
+    "!build"
   ],
   "devDependencies": {
-    "@types/node": "^17.0.23",
+    "@types/node": "~18.18.14",
     "typescript": "^4.6.3"
   }
 }

@@ -11,6 +11,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.js
-!tests/*.js
 *.d.ts
 dist

@@ -3,7 +3,7 @@
  * toPrecision.
  *
  * Every expected value comes from exact decimal arithmetic on BigInt (see
- * exact-decimal.js), never from the library itself. The library documents its
+ * exact-decimal.ts), never from the library itself. The library documents its
  * results as precise to 15 significant digits (toPrecision() defaults to 15),
  * so the theoretical result of an operation is the exact result rounded to 15
  * significant digits, stored as the nearest double.
@@ -11,12 +11,13 @@
  * Some 1.0.x limitations are kept as todo tests: they run and report on every
  * run without failing it. Each todo names the cause.
  *
- * Run with `yarn test` (builds index.js first).
+ * Run with `yarn test`.
  */
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const Calculator = require("../index.js").default;
-const {
+import { test } from "node:test";
+import { strict as assert } from "node:assert";
+import Calculator from "../index";
+import {
+  Decimal,
   parseDecimal,
   addDecimal,
   subtractDecimal,
@@ -28,7 +29,9 @@ const {
   makeRandom,
   randomDecimal,
   expectAll,
-} = require("./exact-decimal");
+} from "./exact-decimal";
+
+type Random = () => number;
 
 const PRECISION = 15;
 /**
@@ -36,21 +39,21 @@ const PRECISION = 15;
  * digits, as a double. Within one double step of a 15-digit tie either
  * neighbour is accepted (see significantCandidates).
  */
-const expected15 = (dec) => significantCandidates(dec, PRECISION).map(Number);
+const expected15 = (dec: Decimal): number[] => significantCandidates(dec, PRECISION).map(Number);
 /** Theoretical public result of the exact quotient a / b. */
-const expectedQuotient = (a, b) =>
+const expectedQuotient = (a: string, b: string): number[] =>
   significantCandidates(divideDecimal(parseDecimal(a), parseDecimal(b), PRECISION), PRECISION).map(Number);
 
 /** Random operand: below 10^7 with 0-4 decimals, so sums stay within 12 digits. */
-const operand = (random, allowNegative = true) =>
+const operand = (random: Random, allowNegative = true): string =>
   randomDecimal(random, 10000000, Math.floor(random() * 5), allowNegative);
 
 /** Random money amount: below 10^7 with 2 decimals. */
-const money = (random, allowNegative = true) =>
+const money = (random: Random, allowNegative = true): string =>
   randomDecimal(random, 10000000, 2, allowNegative);
 
 /** n random pairs from `make`. */
-function* pairs(seed, n, make) {
+function* pairs(seed: number, n: number, make: (random: Random) => string) {
   const random = makeRandom(seed);
   for (let i = 0; i < n; i++) yield { a: make(random), b: make(random) };
 }
@@ -155,7 +158,7 @@ test("plus is commutative: a + b equals b + a", () => {
  * Beyond it, enableCheckBoundary warns (tested below).
  */
 const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
-const productIsSafe = (a, b) => {
+const productIsSafe = (a: string, b: string): boolean => {
   const { unscaled } = multiplyDecimal(parseDecimal(a), parseDecimal(b));
   return (unscaled < 0n ? -unscaled : unscaled) <= MAX_SAFE;
 };
@@ -202,7 +205,7 @@ test("times: small numbers written in exponent form", () => {
       yield { a, b };
     }
   }
-  const toDec = (str) => {
+  const toDec = (str: string): Decimal => {
     const [mantissa, exponent] = str.split("e");
     const dec = parseDecimal(mantissa);
     return { unscaled: dec.unscaled, scale: dec.scale - Number(exponent) };
@@ -319,7 +322,7 @@ test("the first operand can come from the operation when the constructor has non
 });
 
 test("well-known float traps give the exact decimal result", () => {
-  const cases = [
+  const cases: { op: "plus" | "minus" | "times" | "divide"; a: string; b: string; exact: string }[] = [
     { op: "plus", a: "0.1", b: "0.2", exact: "0.3" },
     { op: "plus", a: "0.7", b: "0.1", exact: "0.8" },
     { op: "minus", a: "1", b: "0.9", exact: "0.1" },

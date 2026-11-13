@@ -2,12 +2,12 @@
  * Checks the exact-decimal reference itself against values worked out by hand,
  * since every other test trusts it.
  */
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const E = require("./exact-decimal");
+import { test } from "node:test";
+import { strict as assert } from "node:assert";
+import * as E from "./exact-decimal";
 
 const d = E.parseDecimal;
-const sig = (str, p) => E.roundSignificant(d(str), p);
+const sig = (str: string, p: number): string => E.roundSignificant(d(str), p);
 
 test("reference: exact add, subtract and multiply", () => {
   assert.deepEqual(E.addDecimal(d("0.1"), d("0.2")), { unscaled: 3n, scale: 1 });
@@ -35,7 +35,7 @@ test("reference: rounding to significant digits", () => {
 });
 
 test("reference: division rounded to significant digits", () => {
-  const div = (a, b, p) => E.divideSignificant(d(a), d(b), p);
+  const div = (a: string, b: string, p: number): string => E.divideSignificant(d(a), d(b), p);
   assert.equal(div("1", "3", 15), "0.333333333333333");
   assert.equal(div("2", "3", 15), "0.666666666666667");
   assert.equal(div("100", "7", 15), "14.2857142857143");

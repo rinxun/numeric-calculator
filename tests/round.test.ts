@@ -2,17 +2,17 @@
  * Tests for Calculator#round.
  *
  * Every expected value comes from exact decimal arithmetic on BigInt (see
- * exact-decimal.js), never from the library itself. The
- * rounding rule the reference implements is: round to `n` fraction digits,
- * halves away from zero (0.125 -> 0.13, -0.125 -> -0.13).
+ * exact-decimal.ts), never from the library itself. The rounding rule the
+ * reference implements is: round to `n` fraction digits, halves away from zero
+ * (0.125 -> 0.13, -0.125 -> -0.13).
  *
- * Run with `yarn test` (builds index.js first).
+ * Run with `yarn test`.
  */
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const Calculator = require("../index.js").default;
-
-const {
+import { test } from "node:test";
+import { strict as assert } from "node:assert";
+import Calculator from "../index";
+import {
+  Decimal,
   parseDecimal,
   addDecimal,
   multiplyDecimal,
@@ -21,15 +21,18 @@ const {
   makeRandom,
   randomDecimal,
   expectAll,
-} = require("./exact-decimal");
+} from "./exact-decimal";
+
+type RoundOptions = Parameters<Calculator["round"]>[1];
 
 /** The double the theoretical result is stored as (the nearest double to it). */
-function expectedRound(dec, n) {
+function expectedRound(dec: Decimal, n: number): number {
   return Number(roundHalfAwayFromZero(dec, n));
 }
 
-const round = (value, n, options) => new Calculator(value).round(n, options);
-const SNAP = { snap: true };
+const round = (value: number, n?: number, options?: RoundOptions): number =>
+  new Calculator(value).round(n, options);
+const SNAP: RoundOptions = { snap: true };
 
 test("with snap: every half cent from 0.005 to 1000.005 rounds away from zero, both signs", () => {
   function* halfCents() {
