@@ -37,7 +37,8 @@
     "url": "https://github.com/JandneMa"
   },
   "scripts": {
-    "build": "./node_modules/.bin/tsc"
+    "build": "./node_modules/.bin/tsc",
+    "test": "./node_modules/.bin/tsc > /dev/null && node --test tests/*.test.js"
   },
   "files": [
     "*.js",

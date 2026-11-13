@@ -385,16 +385,21 @@ class Calculator {
 
     this.checkBoundary(amplifyingResult);
 
+    // Round the magnitude, then restore the sign, so a negative value rounds as
+    // the mirror of its positive (-0.125 -> -0.13, like 0.125 -> 0.13) and the
+    // snap nudge moves it away from zero just as it does for positives.
+    const magnitude = Math.abs(amplifyingResult);
+
     // Dust observed in real pipelines reaches a few dozen ULPs (each float op
     // distorts by at most 0.5 ULP), so 64x headroom. This stays safely below
     // half an amplified unit at any magnitude (it scales with the value), and
     // assumes inputs are meaningful well beyond ULP precision.
-    const tolerance = options?.snap
-      ? Math.abs(amplifyingResult) * Number.EPSILON * 64
-      : 0;
+    const tolerance = options?.snap ? magnitude * Number.EPSILON * 64 : 0;
+
+    const rounded = Math.round(magnitude + tolerance);
 
     return this.processDivide(
-      Math.round(amplifyingResult + tolerance),
+      amplifyingResult < 0 ? -rounded : rounded,
       magnification
     );
   }
