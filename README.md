@@ -154,7 +154,7 @@ const result = new NC(-0.125).round(2); // -0.13, the mirror of 0.125 ≈ 0.13
 
 Halves round away from zero, in both signs: a negative value always rounds to the mirror of its positive value.
 
-`options.snap` (default `false`) makes rounding tolerant to binary floating-point representation dust. After plain float arithmetic upstream, a true `95.015` can arrive as `95.01499999999942`, and exact-decimal rounding of the *represented* value then rounds down, disagreeing with the true value. With `snap`, the amplified value is nudged away from zero by up to 64 ULPs of its own magnitude before `Math.round`, so only values sitting on a rounding boundary are affected. The nudge never exceeds a quarter of the last kept digit, so whole numbers and other values clearly away from a half are never moved, however large:
+`options.snap` (default `false`) makes rounding tolerant to binary floating-point representation dust. After plain float arithmetic upstream, a true `95.015` can arrive as `95.01499999999942`, and exact-decimal rounding of the *represented* value then rounds down, disagreeing with the true value. With `snap`, the amplified value is nudged away from zero by up to 64 ULPs of its own magnitude before `Math.round`. The nudge never exceeds a quarter of the last kept digit, so only values within a quarter unit below a rounding boundary are affected, and whole numbers and other values more than a quarter unit from a half are never moved, however large:
 
 ``` typescript
 const dust = 2959.9649999999997; // true value 2959.965, distorted by float subtraction upstream

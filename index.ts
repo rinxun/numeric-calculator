@@ -378,9 +378,12 @@ class Calculator {
     // close below a half as the half. 64 ULPs grow with the value and pass half
     // an amplified unit at about 3.5e13 (3.5e11 at 2 digits), where snap would
     // round whole numbers up (4e11 -> 400000000000.01). Capping the nudge at a
-    // quarter unit keeps values a quarter unit or more from a half untouched at
-    // any magnitude; 0.5 - EPSILON is not enough, since the float addition
-    // itself can round up to the half (4e13 + 0.4999999999999998 === 4e13 + 0.5).
+    // quarter unit keeps values more than a quarter unit below a half untouched
+    // at any magnitude. The cap binds from about 1.76e13 (1.76e11 at 2 digits);
+    // there a value exactly a quarter unit below a half still moves
+    // (200000000000.0625 -> .07). A cap just under 0.25 or 0.5 does not tighten
+    // this, since the float addition itself rounds to the nearer representable
+    // value (4e13 + 0.4999999999999998 === 4e13 + 0.5).
     const tolerance = options?.snap
       ? Math.min(magnitude * Number.EPSILON * 64, 0.25)
       : 0;

@@ -151,10 +151,11 @@ function inSafeRange(str: string, n: number): boolean {
 test("with snap: whole numbers and cent amounts are unchanged at any magnitude", () => {
   // Already rounded to 2 digits, so the exact result is the value itself. 64
   // ULPs pass half a cent from about 3.5e11, so before the snap nudge was capped
-  // 4e11 became 400000000000.01 and 9e14 was 13 cents off.
+  // 4e11 became 400000000000.01 (and 9e14 was 13 cents off, but 9e14 * 100 is
+  // past the safe-integer range, so it is not asserted here; 9e13 is).
   const random = makeRandom(7);
   function* cases() {
-    for (const str of ["400000000000", "900000000000000", "1000000000000"]) {
+    for (const str of ["400000000000", "90000000000000", "1000000000000"]) {
       yield { str };
       yield { str: `-${str}` };
     }
@@ -176,9 +177,11 @@ test("with snap: whole numbers and cent amounts are unchanged at any magnitude",
   }));
 });
 
-test("with snap: values a quarter unit or more from a half match exact rounding", () => {
+test("with snap: values more than a quarter unit from a half match exact rounding", () => {
   // The third decimal is 0-2 (at least 0.3 of a cent below the half) or 6-9
   // (above it), so the nudge, capped at a quarter cent, can never carry them across.
+  // Exactly a quarter unit below still moves once the cap binds (from about
+  // 1.76e11): 200000000000.0625 rounds to .07 with snap.
   const random = makeRandom(8);
   function* cases() {
     for (let i = 0; i < 100000; i++) {
