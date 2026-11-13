@@ -37,18 +37,16 @@
     "url": "https://github.com/JandneMa"
   },
   "scripts": {
-    "build": "./node_modules/.bin/tsc",
-    "pretest": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
-    "test": "./node_modules/.bin/tsc -p tests && node --test build/tests/*.test.js"
+    "build": "tsc",
+    "pretest": "node -e \"if (+process.versions.node.split('.')[0] < 18) { console.error('yarn test needs Node 18+ for node:test'); process.exit(1) } require('fs').rmSync('build', { recursive: true, force: true })\"",
+    "test": "tsc -p tests && node --test build/tests/round.test.js build/tests/arithmetic.test.js build/tests/exact-decimal.test.js"
   },
   "files": [
     "*.js",
     "*.d.ts",
     "package.json",
     "README.md",
-    "LICENSE",
-    "!tests",
-    "!build"
+    "LICENSE"
   ],
   "devDependencies": {
     "@types/node": "~18.18.14",

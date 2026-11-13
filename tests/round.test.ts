@@ -137,6 +137,78 @@ test("with snap: known values with float error from upstream arithmetic", () => 
   }));
 });
 
+/**
+ * round(n) multiplies the value, as an integer, by 10^n (1.25 -> 125 * 100), so
+ * like times() it is exact only while that integer product is a safe integer;
+ * enableCheckBoundary warns beyond it. Random large-magnitude cases stay inside.
+ */
+const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
+function inSafeRange(str: string, n: number): boolean {
+  const { unscaled } = parseDecimal(str);
+  return (unscaled < 0n ? -unscaled : unscaled) * 10n ** BigInt(n) <= MAX_SAFE;
+}
+
+test("with snap: whole numbers and cent amounts are unchanged at any magnitude", () => {
+  // Already rounded to 2 digits, so the exact result is the value itself. 64
+  // ULPs pass half a cent from about 3.5e11, so before the snap nudge was capped
+  // 4e11 became 400000000000.01 and 9e14 was 13 cents off.
+  const random = makeRandom(7);
+  function* cases() {
+    for (const str of ["400000000000", "900000000000000", "1000000000000"]) {
+      yield { str };
+      yield { str: `-${str}` };
+    }
+    for (let exponent = 0; exponent <= 13; exponent++) {
+      for (const lead of ["1", "2", "4", "5", "9"]) {
+        yield { str: lead + "0".repeat(exponent) };
+        yield { str: `-${lead}${"0".repeat(exponent)}` };
+      }
+    }
+    for (let i = 0; i < 50000; i++) {
+      const digits = 9 + Math.floor(random() * 4); // 10^9 .. 10^12, across the 3.5e11 threshold
+      const str = randomDecimal(random, 10 ** digits, 2);
+      if (inSafeRange(str, 2)) yield { str };
+    }
+  }
+  expectAll(cases(), ({ str }) => ({
+    actual: round(Number(str), 2, SNAP),
+    expected: expectedRound(parseDecimal(str), 2),
+  }));
+});
+
+test("with snap: values a quarter unit or more from a half match exact rounding", () => {
+  // The third decimal is 0-2 (at least 0.3 of a cent below the half) or 6-9
+  // (above it), so the nudge, capped at a quarter cent, can never carry them across.
+  const random = makeRandom(8);
+  function* cases() {
+    for (let i = 0; i < 100000; i++) {
+      const digits = 1 + Math.floor(random() * 10);
+      const third = "0126789"[Math.floor(random() * 7)];
+      const str = randomDecimal(random, 10 ** digits, 2) + third;
+      if (inSafeRange(str, 2)) yield { str };
+    }
+  }
+  expectAll(cases(), ({ str }) => ({
+    actual: round(Number(str), 2, SNAP),
+    expected: expectedRound(parseDecimal(str), 2),
+  }));
+});
+
+test("with snap: halves at large magnitudes still round away from zero", () => {
+  const random = makeRandom(9);
+  function* cases() {
+    for (let i = 0; i < 100000; i++) {
+      const digits = 6 + Math.floor(random() * 5); // 10^6 .. 10^10
+      const str = `${randomDecimal(random, 10 ** digits, 2)}5`;
+      if (inSafeRange(str, 2)) yield { str };
+    }
+  }
+  expectAll(cases(), ({ str }) => ({
+    actual: round(Number(str), 2, SNAP),
+    expected: expectedRound(parseDecimal(str), 2),
+  }));
+});
+
 test("without snap: values not on a half match exact rounding", () => {
   const random = makeRandom(5);
   function* cases() {

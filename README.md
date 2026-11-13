@@ -149,16 +149,23 @@ const result = new NC().round(3); // 0
 const result = new NC(5.255).round(2); // 5.26
 const result = new NC(7.65).times(16.5).round(2); // => 7.65 * 16.5 = 126.225 ≈ 126.23
 const result = new NC(26.05).times(16.5).round(2); // => 26.05 * 16.5 = 429.825 ≈ 429.83
+const result = new NC(-0.125).round(2); // -0.13, the mirror of 0.125 ≈ 0.13
 ```
 
-`options.snap` (default `false`) makes rounding tolerant to binary floating-point representation dust. After plain float arithmetic upstream, a true `95.015` can arrive as `95.01499999999942`, and exact-decimal rounding of the *represented* value then rounds down, disagreeing with the true value. With `snap`, the amplified value is nudged by a few ULPs relative to its own magnitude before `Math.round`, so only values sitting exactly on a rounding boundary are affected — everything beyond a few ULPs of the boundary keeps its exact-decimal result, and there is no magic number to tune:
+Halves round away from zero, in both signs: a negative value always rounds to the mirror of its positive value.
+
+`options.snap` (default `false`) makes rounding tolerant to binary floating-point representation dust. After plain float arithmetic upstream, a true `95.015` can arrive as `95.01499999999942`, and exact-decimal rounding of the *represented* value then rounds down, disagreeing with the true value. With `snap`, the amplified value is nudged away from zero by up to 64 ULPs of its own magnitude before `Math.round`, so only values sitting on a rounding boundary are affected. The nudge never exceeds a quarter of the last kept digit, so whole numbers and other values clearly away from a half are never moved, however large:
 
 ``` typescript
 const dust = 2959.9649999999997; // true value 2959.965, distorted by float subtraction upstream
 const result = new NC(dust).round(2); // 2959.96 — exact decimal of the represented value
 const result = new NC(dust).round(2, { snap: true }); // 2959.97 — matches the true half-up value
 const result = new NC(719.6446).round(2, { snap: true }); // 719.64 — values beyond a few ULPs of the boundary are untouched
+const result = new NC(-602.0149999999994).round(2, { snap: true }); // -602.02 — negatives are snapped away from zero too
+const result = new NC(400000000000).round(2, { snap: true }); // 400000000000 — large whole numbers stay whole
 ```
+
+`snap` cannot remove float error from cancellation, where two large numbers of opposite sign give a small result (`-615403.718 + 613501.153` in plain JS): that error scales with the operands, not the result. Compute such values with `NC` instead.
 
 
 
